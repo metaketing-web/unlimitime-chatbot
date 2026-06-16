@@ -1,6 +1,6 @@
 # Unlimitime Chatbot
 
-Chatbot privé pour [`app.unlimitime.com`](https://app.unlimitime.com), aligné sur le [cahier des charges](https://github.com/metaketing-web/unlimitime-chatbot) (juin 2026).
+Chatbot privé pour [`app.unlimitime.com`](https://app.unlimitime.com), aligné sur le cahier des charges (juin 2026).
 
 ## Phase 1 — livrée (collecteur)
 
@@ -9,12 +9,33 @@ L’API chat **Phase 1** est intégrée dans la plateforme collecteur ([metaketi
 | Élément | Détail |
 |---------|--------|
 | **Endpoint** | `POST /api/chat` (Bearer token obligatoire) |
-| **UI** | Widget flottant « U » (utilisateurs connectés) |
+| **UI** | Widget flottant (favicon Unlimitime, utilisateurs connectés) |
 | **Sources** | FAQ Unlimitime, pages preuve (juridique, blockchain, marché), Notion optionnel |
 | **IA** | Synthèse OpenAI si `OPENAI_API_KEY` configurée |
-| **Web** | Recherche légère (Phase 2 preview) pour cote / modèles |
+| **Web** | Recherche légère (preview Phase 2) pour cote / modèles |
 
-Ce dépôt reste le **projet Next.js autonome** pour Phase 2+ (déploiement séparé, connecteurs avancés).
+## Phase 2 — livrée (collecteur)
+
+Améliorations déployées dans **metaketing-web/App** (`server/chat/`, `server/web-research.js`, widget React) :
+
+| Élément | Détail |
+|---------|--------|
+| **Intent routing** | Détection `deposit`, `kyc`, `score`, `horology`, etc. |
+| **FAQ dépôt** | Étapes numérotées (parcours certification → Mes certifications → créneau) |
+| **Sources** | Limitées à 1–3 sources réellement utilisées (ex. « Unlimitime — Dépôt » seul pour la réservation) |
+| **Recherche web** | `researchChatWeb()` + fallback marché horloger ; timestamp de fraîcheur dans la réponse |
+| **Modes** | `documents`, `web`, `horology` ; stubs Phase 3/4 pour Stripe, agenda, Turnkey, WatchCharts |
+| **UI** | Affichage sources + horodatage web dans le widget |
+
+### Test de validation
+
+```bash
+# Question type « comment réserver un dépôt »
+# → intent: deposit
+# → sources: ["Unlimitime — Dépôt"] (sans pages preuve juridique/blockchain)
+```
+
+Ce dépôt reste le **projet Next.js autonome** pour évolutions futures (déploiement séparé, connecteurs avancés).
 
 ## Objectifs long terme
 
@@ -46,7 +67,7 @@ CHATBOT_BRIDGE_SECRET=   # futur pont signé
 OPENAI_API_KEY=
 ```
 
-## Intégration plateforme (Phase 1)
+## Intégration plateforme
 
 ```bash
 curl -X POST https://app.unlimitime.com/api/chat \
@@ -55,11 +76,24 @@ curl -X POST https://app.unlimitime.com/api/chat \
   -d '{"message":"Comment réserver un dépôt ?","lang":"fr"}'
 ```
 
+Réponse attendue (Phase 2) :
+
+```json
+{
+  "ok": true,
+  "answer": "…",
+  "mode": "documents",
+  "sources": ["Unlimitime — Dépôt"],
+  "confidence": "high",
+  "freshness": { "docs": "static", "web": null }
+}
+```
+
 ## Roadmap
 
 1. ~~Squelette web + chat~~
 2. ~~Phase 1 documentaire (collecteur)~~
-3. Ingestion Notion complète + index sémantique
-4. Recherche web temps réel (Phase 2)
-5. Connecteurs métier (Stripe, agenda, Turnkey)
-6. SCORE™ et WatchCharts
+3. ~~Recherche web + routing intent + sources ciblées (Phase 2 collecteur)~~
+4. Ingestion Notion complète + index sémantique
+5. Connecteurs métier (Stripe, agenda, Turnkey) — Phase 3
+6. SCORE™ et WatchCharts — Phase 4
